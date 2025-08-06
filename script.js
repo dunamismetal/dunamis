@@ -72,53 +72,65 @@ if (heroScroll) {
 }
 
 // Contact form handling
-const contactForm = document.getElementById('contactForm');
+const contactForm = document.getElementById("contactForm");
 if (contactForm) {
-    contactForm.addEventListener('submit', function(e) {
+    contactForm.addEventListener("submit", function(e) {
         e.preventDefault();
         
-        // Validar formulário
-        if (!validateForm(this)) {
-            showNotification('Por favor, preencha todos os campos obrigatórios corretamente.', 'error');
-            return;
-        }
-        
-        // Get form data
+        // Capturar dados do formulário
         const formData = new FormData(this);
+        const nome = formData.get("nome");
+        const email = formData.get("email");
+        const telefone = formData.get("telefone") || "Não informado";
+        const empresa = formData.get("empresa") || "Não informada";
+        const servico = formData.get("servico");
+        const mensagem = formData.get("mensagem");
         
-        // Show loading state
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        submitBtn.innerHTML = '<span class="loading"></span> Enviando...';
-        submitBtn.disabled = true;
+        // Mapear serviços
+        const servicosMap = {
+            "corte": "Corte de Metais",
+            "conformacao": "Conformação",
+            "soldagem": "Soldagem",
+            "outros": "Outros"
+        };
         
-        // Send form data via AJAX
-        fetch('contact_handler.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Reset form
-                this.reset();
-                
-                // Show success message
-                showNotification(data.message, 'success');
-            } else {
-                // Show error message
-                showNotification(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Erro ao enviar mensagem. Tente novamente ou entre em contato diretamente.', 'error');
-        })
-        .finally(() => {
-            // Reset button
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-        });
+        const servicoNome = servicosMap[servico] || "Não especificado";
+        
+        // Criar mensagem formatada para WhatsApp
+        const mensagemWhatsApp = `🔧 *NOVO ORÇAMENTO - DUNAMIS METAL*
+
+📋 *DADOS DO CLIENTE:*
+👤 *Nome:* ${nome}
+📧 *E-mail:* ${email}
+📱 *Telefone:* ${telefone}
+🏢 *Empresa:* ${empresa}
+
+🛠️ *SERVIÇO SOLICITADO:*
+${servicoNome}
+
+💬 *MENSAGEM:*
+${mensagem}
+
+---
+_Enviado através do site da Dunamis Metal_`;
+        
+        // Codificar mensagem para URL
+        const mensagemCodificada = encodeURIComponent(mensagemWhatsApp);
+        
+        // Número do WhatsApp da empresa (sem símbolos, apenas números)
+        const numeroWhatsApp = "5511995768612";
+        
+        // Criar URL do WhatsApp
+        const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${mensagemCodificada}`;
+        
+        // Mostrar notificação de sucesso
+        showNotification("Redirecionando para o WhatsApp...", "success");
+        
+        // Abrir WhatsApp em nova aba
+        window.open(urlWhatsApp, "_blank");
+        
+        // Limpar formulário
+        this.reset();
     });
 }
 
