@@ -123,6 +123,15 @@ _Enviado através do site da Dunamis Metal_`;
         // Criar URL do WhatsApp
         const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${mensagemCodificada}`;
         
+        // Registrar conversão no Google Ads
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'conversion', {
+                'send_to': 'AW-17448899562/yFroCN3h-IUbEOqnpIBB',
+                'value': 1.0,
+                'currency': 'BRL'
+            });
+        }
+        
         // Mostrar notificação de sucesso
         showNotification("Redirecionando para o WhatsApp...", "success");
         
