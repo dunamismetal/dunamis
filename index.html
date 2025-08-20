@@ -386,30 +386,82 @@
     <!-- Scripts -->
     <script src="script.js"></script>
 
-<!-- Google Ads Conversion: Contato (fires on form submit) -->
+<!-- Google Ads Conversion: Contato (WhatsApp redirect-safe) -->
 <script>
 (function() {
-  function fireContatoConversion() {
+  var SEND_TO = 'AW-17448899562/yFroCN3h-IUbEOqnpIBB';
+
+  function findExistingWhatsAppLink() {
+    var a = document.querySelector('a[href*="wa.me"], a[href*="whatsapp.com"]');
+    return a ? a.getAttribute('href') : null;
+  }
+
+  function buildMessageFromForm() {
+    var nome = (document.getElementById('nome')||{}).value || '';
+    var email = (document.getElementById('email')||{}).value || '';
+    var telefone = (document.getElementById('telefone')||{}).value || '';
+    var empresa = (document.getElementById('empresa')||{}).value || '';
+    var servico = (document.getElementById('servico')||{}).value || '';
+    var mensagem = (document.getElementById('mensagem')||{}).value || '';
+    var msg = 'Olá! Gostaria de falar com a Dunamis Metal.%0A%0A' +
+              'Nome: ' + encodeURIComponent(nome) + '%0A' +
+              'E-mail: ' + encodeURIComponent(email) + '%0A' +
+              'Telefone: ' + encodeURIComponent(telefone) + '%0A' +
+              'Empresa: ' + encodeURIComponent(empresa) + '%0A' +
+              'Serviço: ' + encodeURIComponent(servico) + '%0A' +
+              'Mensagem: ' + encodeURIComponent(mensagem);
+    return msg;
+  }
+
+  function buildWhatsAppUrl() {
+    // Tenta reaproveitar um link já existente na página
+    var existing = findExistingWhatsAppLink();
+    var base = existing ? existing.split('?')[0] : 'https://wa.me/5511995768612'; // padrão (DDD + número)
+    var msg = buildMessageFromForm();
+    var sep = base.indexOf('?') === -1 ? '?' : '&';
+    return base + sep + 'text=' + msg;
+  }
+
+  function fireConversionAndGo(url) {
+    var redirected = false;
+    function go() {
+      if (!redirected) {
+        redirected = true;
+        window.location.href = url;
+      }
+    }
     try {
-      gtag('event', 'conversion', {'send_to': 'AW-17448899562/yFroCN3h-IUbEOqnpIBB'});
+      gtag('event', 'conversion', {
+        'send_to': SEND_TO,
+        'event_callback': go
+      });
+      // Fallback de segurança caso o callback não dispare
+      setTimeout(go, 1200);
     } catch (e) {
-      // fail silently
+      go();
     }
   }
-  // Attach on submit of the contact form
+
   document.addEventListener('DOMContentLoaded', function() {
+    // Intercepta envio do formulário
     var form = document.getElementById('contactForm');
     if (form) {
-      form.addEventListener('submit', function() {
-        // Fire immediately on submit
-        fireContatoConversion();
-      }, { passive: true });
+      form.addEventListener('submit', function(ev) {
+        ev.preventDefault();
+        var waUrl = buildWhatsAppUrl();
+        fireConversionAndGo(waUrl);
+      });
     }
-    // As a minimal fallback, also attach to the button click (in case form handler changes)
-    var btns = document.querySelectorAll('button[type="submit"], input[type="submit"]');
-    btns.forEach(function(btn){
-      btn.addEventListener('click', fireContatoConversion, { passive: true });
-    });
+    // Intercepta cliques em botões/links do WhatsApp
+    document.body.addEventListener('click', function(e) {
+      var el = e.target.closest('a[href*="wa.me"], a[href*="whatsapp.com"], .btn-whatsapp');
+      if (!el) return;
+      e.preventDefault();
+      // Se o link já tem um href pronto, utiliza; senão monta a partir do form
+      var href = el.getAttribute('href');
+      var waUrl = href ? href : buildWhatsAppUrl();
+      fireConversionAndGo(waUrl);
+    }, { capture: true });
   });
 })();
 </script>
