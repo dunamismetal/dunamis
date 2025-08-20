@@ -385,6 +385,35 @@
 
     <!-- Scripts -->
     <script src="script.js"></script>
+
+<!-- Google Ads Conversion: Contato (fires on form submit) -->
+<script>
+(function() {
+  function fireContatoConversion() {
+    try {
+      gtag('event', 'conversion', {'send_to': 'AW-17448899562/yFroCN3h-IUbEOqnpIBB'});
+    } catch (e) {
+      // fail silently
+    }
+  }
+  // Attach on submit of the contact form
+  document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('contactForm');
+    if (form) {
+      form.addEventListener('submit', function() {
+        // Fire immediately on submit
+        fireContatoConversion();
+      }, { passive: true });
+    }
+    // As a minimal fallback, also attach to the button click (in case form handler changes)
+    var btns = document.querySelectorAll('button[type="submit"], input[type="submit"]');
+    btns.forEach(function(btn){
+      btn.addEventListener('click', fireContatoConversion, { passive: true });
+    });
+  });
+})();
+</script>
+
 </body>
 </html>
 
